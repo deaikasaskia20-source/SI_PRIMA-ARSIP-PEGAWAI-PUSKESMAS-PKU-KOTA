@@ -1,6 +1,15 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Home, Users, Upload, FileText, LogOut, Loader2 } from "lucide-react";
+import {
+  Home,
+  Users,
+  Upload,
+  FileText,
+  LogOut,
+  Loader2,
+  Menu,
+  X,
+} from "lucide-react";
 import { supabase } from "../integrations/supabase/client";
 
 export default function Sidebar() {
@@ -8,6 +17,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // ✅ Sidebar toggle untuk mobile
 
   // 🔍 Ambil role user saat ini
   useEffect(() => {
@@ -78,55 +88,79 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="w-64 min-h-screen flex flex-col justify-between text-white shadow-2xl border-r border-indigo-800 bg-gradient-to-b from-indigo-500 via-blue-600 to-indigo-950">
-      <div>
-        {/* Header */}
-        <div className="p-6 text-center font-bold text-2xl border-b border-indigo-700 backdrop-blur-sm bg-white/10">
-          <h1 className="tracking-wide drop-shadow-lg">SI PRIMA</h1>
-          <p className="text-xs font-light text-indigo-200 mt-1 italic">
-            Sistem Informasi Pengarsipan Pegawai Puskesmas Pekanbaru Kota
-          </p>
-        </div>
+    <>
+      {/* Tombol menu (hanya di mobile) */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="fixed top-4 left-4 z-50 md:hidden bg-indigo-600 text-white p-2 rounded-md shadow-md hover:bg-indigo-700 transition"
+      >
+        {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+      </button>
 
-        {/* Navigasi */}
-        <nav className="p-4 space-y-2">
-          {menuItems.map((item) => {
-            const isActive = location.pathname === item.to;
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md scale-[1.02]"
-                    : "hover:bg-white/10 hover:scale-[1.01]"
-                }`}
-              >
-                <span className={`${isActive ? "text-white" : "text-indigo-200"}`}>
-                  {item.icon}
-                </span>
-                <span
-                  className={`text-sm ${
-                    isActive ? "font-semibold text-white" : "text-indigo-100"
+      {/* Overlay saat sidebar terbuka di mobile */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden"
+        ></div>
+      )}
+
+      {/* Sidebar utama */}
+      <div
+        className={`fixed md:static top-0 left-0 z-50 transform ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0 transition-transform duration-300 ease-in-out w-64 min-h-screen flex flex-col justify-between text-white shadow-2xl border-r border-indigo-800 bg-gradient-to-b from-indigo-500 via-blue-600 to-indigo-950`}
+      >
+        <div>
+          {/* Header */}
+          <div className="p-6 text-center font-bold text-2xl border-b border-indigo-700 backdrop-blur-sm bg-white/10">
+            <h1 className="tracking-wide drop-shadow-lg">SI PRIMA</h1>
+            <p className="text-[11px] font-light text-indigo-200 mt-1 italic leading-tight">
+              Sistem Informasi Pengarsipan Pegawai<br />Puskesmas Pekanbaru Kota
+            </p>
+          </div>
+
+          {/* Navigasi */}
+          <nav className="p-4 space-y-2">
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.to;
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setSidebarOpen(false)} // Tutup sidebar di mobile saat link diklik
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md scale-[1.02]"
+                      : "hover:bg-white/10 hover:scale-[1.01]"
                   }`}
                 >
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
+                  <span className={`${isActive ? "text-white" : "text-indigo-200"}`}>
+                    {item.icon}
+                  </span>
+                  <span
+                    className={`text-sm ${
+                      isActive ? "font-semibold text-white" : "text-indigo-100"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
 
-      {/* Tombol Logout */}
-      <div className="p-4 border-t border-indigo-700 bg-indigo-900/40 backdrop-blur-md">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-indigo-700 to-indigo-900 hover:from-blue-600 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-300"
-        >
-          <LogOut size={16} /> Keluar
-        </button>
+        {/* Tombol Logout */}
+        <div className="p-4 border-t border-indigo-700 bg-indigo-900/40 backdrop-blur-md">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-indigo-700 to-indigo-900 hover:from-blue-600 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-300"
+          >
+            <LogOut size={16} /> Keluar
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
