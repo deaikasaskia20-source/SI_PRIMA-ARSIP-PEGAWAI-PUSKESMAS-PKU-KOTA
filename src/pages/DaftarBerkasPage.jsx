@@ -21,6 +21,7 @@ export default function DaftarBerkasPage() {
   const [uploading, setUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // ✅ Tambahkan “IJAZAH PENDIDIKAN TERAKHIR” ke daftar dokumen
   const dokumenList = [
     "SK CPNS",
     "SK PNS",
@@ -33,6 +34,7 @@ export default function DaftarBerkasPage() {
     "SK FUNGSIONAL",
     "BPJS",
     "AKTE",
+    "IJAZAH PENDIDIKAN TERAKHIR", // 🆕 ditambahkan di sini
   ];
 
   // 🧭 Ambil data pegawai dari Supabase
@@ -111,27 +113,24 @@ export default function DaftarBerkasPage() {
   // 📤 Upload dokumen baru
   const handleUpload = async (pegawai, field, file) => {
     if (!file) return;
-
     setUploading(true);
+
     try {
       const fileExt = file.name.split(".").pop();
       const filePath = `${pegawai.email}/${field.replace(/\s+/g, "_")}.${fileExt}`;
 
-      // Upload ke storage Supabase
       const { error: uploadError } = await supabase.storage
         .from("berkas_pegawai")
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // Ambil public URL
       const { data: publicUrlData } = supabase.storage
         .from("berkas_pegawai")
         .getPublicUrl(filePath);
 
       const newUrl = publicUrlData.publicUrl;
 
-      // Update ke tabel pegawai
       const updatedUrls = {
         ...pegawai.berkas_url,
         [field]: { url: newUrl, uploaded_at: new Date().toISOString() },
@@ -146,10 +145,7 @@ export default function DaftarBerkasPage() {
 
       alert(`✅ Dokumen ${field} berhasil diupload!`);
       fetchPegawai();
-      setSelectedPegawai({
-        ...pegawai,
-        berkas_url: updatedUrls,
-      });
+      setSelectedPegawai({ ...pegawai, berkas_url: updatedUrls });
     } catch (error) {
       console.error("❌ Gagal upload:", error.message);
       alert("Gagal mengupload dokumen. Coba lagi.");
@@ -246,42 +242,67 @@ export default function DaftarBerkasPage() {
               Tidak ada pegawai ditemukan.
             </p>
           ) : (
-            <table className="min-w-full border-collapse">
+            <table className="min-w-full border-collapse text-sm">
               <thead>
-                <tr className="bg-blue-600 text-white text-sm">
+                <tr className="bg-blue-600 text-white">
                   <th className="py-3 px-4 text-left rounded-tl-lg">
                     Nama Pegawai
                   </th>
                   <th className="py-3 px-4 text-left">NIP</th>
                   <th className="py-3 px-4 text-left">Jabatan</th>
+                  {/* 🆕 Tambah kolom Ijazah */}
+                  <th className="py-3 px-4 text-left">Ijazah Terakhir</th>
                   <th className="py-3 px-4 text-center rounded-tr-lg">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredList.map((pegawai) => (
-                  <tr
-                    key={pegawai.email || pegawai.nip || pegawai.nama}
-                    className="border-b hover:bg-blue-50 transition text-sm"
-                  >
-                    <td className="py-3 px-4 font-medium">{pegawai.nama}</td>
-                    <td className="py-3 px-4">{pegawai.nip || "-"}</td>
-                    <td className="py-3 px-4">{pegawai.jabatan || "-"}</td>
-                    <td className="py-3 px-4 text-center">
-                      <button
-                        onClick={() => handleLihatDokumen(pegawai)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-sm transition"
-                      >
-                        📂 Lihat Dokumen
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredList.map((pegawai) => {
+                  const ijazah =
+                    pegawai.berkas_url?.["IJAZAH PENDIDIKAN TERAKHIR"];
+                  return (
+                    <tr
+                      key={pegawai.email || pegawai.nip}
+                      className="border-b hover:bg-blue-50 transition"
+                    >
+                      <td className="py-3 px-4 font-medium">{pegawai.nama}</td>
+                      <td className="py-3 px-4">{pegawai.nip || "-"}</td>
+                      <td className="py-3 px-4">{pegawai.jabatan || "-"}</td>
+
+                      {/* Kolom Ijazah */}
+                      <td className="py-3 px-4">
+                        {ijazah?.url ? (
+                          <a
+                            href={ijazah.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-blue-600 hover:underline text-sm"
+                          >
+                            Lihat Ijazah
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 italic text-sm">
+                            Belum diunggah
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          onClick={() => handleLihatDokumen(pegawai)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs transition"
+                        >
+                          📂 Lihat Dokumen
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
         </div>
 
-        {/* 🪟 Modal Dokumen */}
+        {/* Modal dokumen tetap sama */}
         {showModal && selectedPegawai && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl w-full max-w-2xl p-6 shadow-2xl relative">
@@ -336,7 +357,7 @@ export default function DaftarBerkasPage() {
                             className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-xs transition"
                           >
                             <Trash2 size={14} /> Hapus
-                          </button>
+                             </button>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
