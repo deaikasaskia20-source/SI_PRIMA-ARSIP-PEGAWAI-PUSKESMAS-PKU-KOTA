@@ -18,6 +18,7 @@ export default function PegawaiUploadBerkas() {
     "SK BERKALA",
     "SK FUNGSIONAL",
     "BPJS",
+    "IJAZAH PENDIDIKAN TERAKHIR", // ✅ tambahan kolom baru
   ];
 
   useEffect(() => {
@@ -165,9 +166,7 @@ export default function PegawaiUploadBerkas() {
                       <input
                         type="file"
                         className="hidden"
-                        onChange={(e) =>
-                          handleUpload(jenis, e.target.files[0])
-                        }
+                        onChange={(e) => handleUpload(jenis, e.target.files[0])}
                       />
                     </label>
                     <button
@@ -185,9 +184,7 @@ export default function PegawaiUploadBerkas() {
                     <input
                       type="file"
                       className="hidden"
-                      onChange={(e) =>
-                        handleUpload(jenis, e.target.files[0])
-                      }
+                      onChange={(e) => handleUpload(jenis, e.target.files[0])}
                     />
                   </label>
                   <p className="text-gray-400 italic text-xs">Belum diunggah</p>
